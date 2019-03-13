@@ -10,7 +10,7 @@ pip3 install conan
 ```bash
 mkdir build && cd build
 conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-conan install .. -sbuild_type=Debug
+conan install .. --build glad -sbuild_type=Debug
 ```
 
 ## Configure

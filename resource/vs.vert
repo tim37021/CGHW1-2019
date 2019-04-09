@@ -6,10 +6,14 @@ layout(location = 2) in vec3 normal;
 uniform mat4 model;
 uniform mat4 vp;
 
-out vec2 uv;
+out vec3 v_position;
+out vec2 v_uv;
+out vec3 v_normal;
 
 void main()
 {
-    uv = texcoord;
+    v_position = position;
+    v_uv = texcoord;
+    v_normal = normal;
     gl_Position = vp*model*vec4(position, 1.0);
 }

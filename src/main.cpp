@@ -27,10 +27,10 @@ int main(void)
     if (!glfwInit())
         exit(EXIT_FAILURE);
     // Good bye Mac OS X
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+    window = glfwCreateWindow(1024, 768, "Simple example", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -57,7 +57,16 @@ int main(void)
 
     auto text = Texture2D::LoadFromFile("../resource/image.png");
     auto mesh = StaticMesh::LoadMesh("../resource/sphere.obj");
-    auto prog = Program::LoadFromFile("../resource/vs.vert", "../resource/fs.frag");
+    auto prog = Program::LoadFromFile(
+        "../resource/vs.vert",
+        "../resource/gs.geom",
+        "../resource/fs.frag"
+    );
+    auto prog2 = Program::LoadFromFile(
+        "../resource/vs.vert",
+        "../resource/gs.geom",
+        "../resource/fs_light.frag"
+    );
 
 
     // Do not remove {}, why???
@@ -74,6 +83,8 @@ int main(void)
 
     float degree = 0.0f;
     glm::vec3 object_color{1.0f};
+    bool flat_shading = false;
+    glm::vec3 light_pos;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -87,15 +98,29 @@ int main(void)
 
         glEnable(GL_DEPTH_TEST);
 
-        prog["vp"] = glm::perspective(45/180.0f*3.1415926f, 640.0f/480.0f, 0.1f, 10000.0f)*
+        prog["vp"] = glm::perspective(45/180.0f*3.1415926f, 1024.0f/768.0f, 0.1f, 10000.0f)*
             glm::lookAt(glm::vec3{0, 0, 10}, glm::vec3{0, 0, 0}, glm::vec3{0, 1, 0});
         prog["model"] = glm::rotate(glm::mat4(1.0f), degree*3.1415926f/180.0f, glm::vec3(0, 1, 0));
         prog["object_color"] = object_color;
+        prog["light_pos"] = light_pos;
 
         prog["text"] = 0;
         text.bindToChannel(0);
         prog.use();
+        prog["flat_shading"] = static_cast<int>(flat_shading);
         mesh.draw();
+
+        {
+            prog2["vp"] = glm::perspective(45/180.0f*3.1415926f, 1024.0f/768.0f, 0.1f, 10000.0f)*
+            glm::lookAt(glm::vec3{0, 0, 10}, glm::vec3{0, 0, 0}, glm::vec3{0, 1, 0});
+            // point light
+            prog2["model"] = glm::translate(glm::mat4(1.0f), light_pos)*glm::scale(glm::mat4(1.0f), glm::vec3{0.2f});
+            prog["flat_shading"] = 0;
+
+            prog2.use();
+            mesh.draw();
+
+        }
 
         glDisable(GL_DEPTH_TEST);
 
@@ -114,11 +139,14 @@ int main(void)
             ImGui::SliderFloat("degree", &degree, 0.0f, 360.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
             ImGui::ColorEdit3("object color", glm::value_ptr(object_color)); // Edit 3 floats representing a color
-
+            ImGui::SliderFloat3("Position", glm::value_ptr(light_pos), -10, 10);
             if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
                 counter++;
             ImGui::SameLine();
             ImGui::Text("counter = %d", counter);
+            ImGui::Checkbox("Flat Shading", &flat_shading);
+            
+
             ImGui::Image(reinterpret_cast<ImTextureID>(text.id()), ImVec2{128, 128});
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             if(ImGui::Button("Reload Shader")) {

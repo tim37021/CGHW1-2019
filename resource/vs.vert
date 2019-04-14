@@ -12,8 +12,8 @@ out vec3 v_normal;
 
 void main()
 {
-    v_position = position;
+    v_position = (model*vec4(position, 1.0)).xyz;
     v_uv = texcoord;
-    v_normal = normal;
+    v_normal = (model*vec4(normal, 0.0)).xyz;
     gl_Position = vp*model*vec4(position, 1.0);
 }

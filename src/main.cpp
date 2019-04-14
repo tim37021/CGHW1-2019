@@ -103,6 +103,7 @@ int main(void)
         prog["model"] = glm::rotate(glm::mat4(1.0f), degree*3.1415926f/180.0f, glm::vec3(0, 1, 0));
         prog["object_color"] = object_color;
         prog["light_pos"] = light_pos;
+        prog["eye_pos"] = glm::vec3{0, 0, 10};
 
         prog["text"] = 0;
         text.bindToChannel(0);
